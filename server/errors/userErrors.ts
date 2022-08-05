@@ -1,0 +1,1 @@
+class ExistenceError extends Error {}
