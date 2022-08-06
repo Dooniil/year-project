@@ -9,7 +9,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import bcryptjs from "bcryptjs";
 import User from "../database/userModel.js";
+import jwt from "jsonwebtoken";
+import key from "../config.js";
 import { validationResult } from "express-validator";
+const generateAccessToken = (id, role) => {
+    const payload = {
+        id,
+        role,
+    };
+    return jwt.sign(payload, key.secret, { expiresIn: "24h" });
+};
 class authController {
     signIn(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -31,7 +40,12 @@ class authController {
                         .status(400)
                         .json({ message: `Incorrect password for ${email}` });
                 }
-                return res.status(200).json({ message: "Logged", data: req.body });
+                const candidateId = yield candidate.getDataValue("id");
+                const candidateRole = yield candidate.getDataValue("role");
+                const token = generateAccessToken(candidateId, candidateRole);
+                return res
+                    .status(200)
+                    .json({ message: "Logged", data: req.body, token: token });
             }
             catch (e) {
                 console.log(e);
@@ -68,9 +82,22 @@ class authController {
             }
         });
     }
-    getUsers(req, res) {
+    getUser(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                res.status(200);
+            }
+            catch (e) {
+                console.log(e);
+                res.status(400).json({ message: "Get users error" });
+            }
+        });
+    }
+    getUsersAdmin(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const users = yield User.findAll();
+                res.status(200).json(users);
             }
             catch (e) {
                 console.log(e);

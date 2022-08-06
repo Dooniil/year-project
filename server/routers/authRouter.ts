@@ -21,6 +21,7 @@ router.post(
   ],
   controller.signUp
 );
-router.get("/users", controller.getUsers);
+router.get("/user:id", controller.getUser);
+router.get("/users", controller.getUsersAdmin);
 
 export default router;
