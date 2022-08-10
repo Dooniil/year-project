@@ -12,8 +12,7 @@ export default (req, res, next) => {
       return res.status(403).json({ message: "Users hasn't authorizated" });
     }
     token = token.split(" ")[1];
-    const decodedData = jwt.verify(token, key.secret);
-    req.user = decodedData;
+    req.user = jwt.verify(token, key.secret);
     next();
   } catch (e) {
     console.log(e);
