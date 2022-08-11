@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import key from "../config.js";
 
-export default (role) => {
+export default (roles) => {
   return (req, res, next) => {
     if (req.method === "OPTIONS") {
       next();
@@ -14,7 +14,7 @@ export default (role) => {
       }
       token = token.split(" ")[1];
       const { role: userRole } = jwt.verify(token, key.secret);
-      if (role === userRole) {
+      if (roles.includes(userRole)) {
         next();
       } else {
         return res.status(403).json({ message: "Users doesn't have access" });
