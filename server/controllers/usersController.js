@@ -36,17 +36,19 @@ class UsersController {
 
   async deleteUser(req, res) {
     try {
+      const user = await User.findOne({ where: { id: req.params.id } });
+      if (!user) {
+        return res.status(400).json({ message: "Non-existed user" });
+      }
+
       if (!roleTools.checkRoleAdmin(req.user.role)) {
         if (req.user.id != req.params.id) {
           return res.status(400).json({ message: "Access denied" });
         }
       }
-      const user = await User.findOne({ where: { id: req.params.id } });
-      if (!user) {
-        return res.status(400).json({ message: "Non-existed user" });
-      }
+
       const { id, roleId } = user;
-      if (roleId == 2 && req.user.id != req.params.id) {
+      if (roleId == 2 && req.user.id != id) {
         return res.status(400).json({ message: "Access denied" });
       }
       await User.destroy({ where: { id: id } });
