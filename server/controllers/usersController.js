@@ -1,7 +1,7 @@
 import User from "../database/userModel.js";
 import roleTools from "../tools/roleTools.js";
 
-class getUsersController {
+class UsersController {
   async getUser(req, res) {
     try {
       const { id, name, email, password, roleId, createdAt, updatedAt } =
@@ -33,6 +33,29 @@ class getUsersController {
       return res.status(400).json({ message: "Get users error" });
     }
   }
+
+  async deleteUser(req, res) {
+    try {
+      if (!roleTools.checkRoleAdmin(req.user.role)) {
+        if (req.user.id != req.params.id) {
+          return res.status(400).json({ message: "Access denied" });
+        }
+      }
+      const user = await User.findOne({ where: { id: req.params.id } });
+      if (!user) {
+        return res.status(400).json({ message: "Non-existed user" });
+      }
+      const { id, roleId } = user;
+      if (roleId == 2 && req.user.id != req.params.id) {
+        return res.status(400).json({ message: "Access denied" });
+      }
+      await User.destroy({ where: { id: id } });
+      return res.status(200).json({ message: "User has been deleted" });
+    } catch (e) {
+      console.log(e);
+      return res.status(400).json({ message: "Delete users error" });
+    }
+  }
 }
 
-export default new getUsersController();
+export default new UsersController();

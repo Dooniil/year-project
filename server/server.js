@@ -5,7 +5,7 @@ import express from "express";
 import authRouter from "./routers/authRouter.js";
 import sequelize from "./database/connect.js";
 import cors from "cors";
-import getUsersRouter from "./routers/getUsersRouter.js";
+import usersRouter from "./routers/usersRouter.js";
 
 const app = express();
 
@@ -21,8 +21,11 @@ const start = async () => {
   try {
     await sequelize.authenticate();
     await sequelize.sync();
+
+    // CONNECTING ROUTERS
     app.use("/", authRouter);
-    app.use("/users", getUsersRouter);
+    app.use("/users", usersRouter);
+
     app.listen(port, hostname, () => {
       console.log("Express server is running");
     });
