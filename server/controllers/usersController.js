@@ -1,20 +1,13 @@
 import User from "../database/userModel.js";
-import roleTools from "../tools/roleTools.js";
+import { validationResult } from "express-validator";
+import bcryptjs from "bcryptjs";
 
 class UsersController {
   async getUser(req, res) {
     try {
-      const user = await User.findOne({ where: { id: req.params.id } });
-      if (!user) {
-        return res.status(400).json({ message: "Non - existent user" });
-      }
-      const { id, name, email, password, roleId, createdAt, updatedAt } = user;
-      const roleName = roleTools.roleNames[roleId];
-
-      if (roleTools.checkRoleAdmin(req.user.role)) {
-        return res
-          .status(200)
-          .json({ id, name, email, password, roleName, createdAt, updatedAt });
+      const { name, email, roleName } = req.selectedUser;
+      if (req.user.role == 2) {
+        return res.status(200).json(req.selectedUser);
       } else {
         return res.status(200).json({ name, email, roleName });
       }
@@ -36,26 +29,58 @@ class UsersController {
 
   async deleteUser(req, res) {
     try {
-      const user = await User.findOne({ where: { id: req.params.id } });
-      if (!user) {
-        return res.status(400).json({ message: "Non - existent user" });
-      }
-
-      if (!roleTools.checkRoleAdmin(req.user.role)) {
-        if (req.user.id != req.params.id) {
-          return res.status(400).json({ message: "Access denied" });
-        }
-      }
-
-      const { id, roleId } = user;
-      if (roleId == 2 && req.user.id != id) {
-        return res.status(400).json({ message: "Access denied" });
-      }
-      await User.destroy({ where: { id: id } });
+      await User.destroy({ where: { id: user.id } });
       return res.status(200).json({ message: "User has been deleted" });
     } catch (e) {
       console.log(e);
       return res.status(400).json({ message: "Delete users error" });
+    }
+  }
+
+  async updateUser(req, res) {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ message: "Sign in error", errors });
+      }
+      const { name, email } = req.body;
+      if (req.selectedUser.email === email) {
+        return res.status(400).json({ message: "Email must be different" });
+      }
+      await req.selectedUser.update({
+        name: name,
+        email: email,
+      });
+      return res.status(200).json({ message: "Update has been done" });
+    } catch (e) {
+      console.log(e);
+      return res.status(400).json({ message: "Update user error" });
+    }
+  }
+  async updatePassword(req, res) {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ message: "Sign in error", errors });
+      }
+
+      const { oldPassword, newPassword } = req.body;
+      if (!bcryptjs.compareSync(oldPassword, req.selectedUser.password)) {
+        return res.status(400).json({ message: "Old password isn't same" });
+      }
+      if (bcryptjs.compareSync(newPassword, req.selectedUser.password)) {
+        return res
+          .status(400)
+          .json({ message: "New password must be different with old" });
+      }
+      const hashPassword = bcryptjs.hashSync(newPassword, 7);
+      await req.selectedUser.update({
+        password: hashPassword,
+      });
+      return res.status(200).json({ message: "Update has been done" });
+    } catch (e) {
+      console.log(e);
+      return res.status(400).json({ message: "Update user error" });
     }
   }
 }

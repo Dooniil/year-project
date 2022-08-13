@@ -8,12 +8,7 @@ export default (roles) => {
     }
 
     try {
-      let token = req.headers.authorization;
-      if (!token) {
-        return res.status(403).json({ message: "Users hasn't authorizated" });
-      }
-      token = token.split(" ")[1];
-      const { role: userRole } = jwt.verify(token, key.secret);
+      const { role: userRole } = req.user;
       if (roles.includes(userRole)) {
         next();
       } else {

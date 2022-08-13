@@ -1,6 +1,13 @@
 import { DataTypes } from "sequelize";
 import sequelize from "./connect.js";
 import Role from "./roleModel.js";
+
+const roleNames = {
+  0: "Student",
+  1: "Teacher",
+  2: "Admin",
+};
+
 const User = sequelize.define("users", {
   id: {
     type: DataTypes.INTEGER,
@@ -26,6 +33,12 @@ const User = sequelize.define("users", {
     references: {
       model: Role,
       key: "id",
+    },
+  },
+  roleName: {
+    type: DataTypes.VIRTUAL,
+    get() {
+      return roleNames[this.roleId];
     },
   },
 });

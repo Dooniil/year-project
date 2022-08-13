@@ -27,16 +27,13 @@ class authController {
         return res.status(400).json({ message: "User isn't in DB" });
       }
 
-      const hashPassword = await candidate.getDataValue("password");
-      if (!bcryptjs.compareSync(password, hashPassword)) {
+      if (!bcryptjs.compareSync(password, candidate.password)) {
         return res
           .status(400)
           .json({ message: `Incorrect password for ${email}` });
       }
-      const candidateId = await candidate.getDataValue("id");
-      const candidateRole = await candidate.getDataValue("roleId");
 
-      const token = generateAccessToken(candidateId, candidateRole);
+      const token = generateAccessToken(candidate.id, candidate.roleId);
       return res
         .status(200)
         .json({ message: "Logged", data: req.body, token: token });
